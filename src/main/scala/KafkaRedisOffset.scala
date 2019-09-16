@@ -216,6 +216,20 @@ import spark.implicits._
           }
 
 
+          /**
+            * 可视化
+            */
+
+
+          val hourstr1 = s"select * from tb_access_status where logdate='${Hourtime}' "
+          val hourres1 = statement.executeQuery(hourstr1)
+
+          if(!hourres1.next()){
+            statement.execute(s"insert into tb_access_status (logdate,pv,uv) values ('${Hourtime}',1,'${money}')")
+          } else {
+            statement.execute(s"update tb_access_status set pv=pv+1, uv= uv+'${money}' where logdate='${Hourtime}' ")
+          }
+
 
 
 

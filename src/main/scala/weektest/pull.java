@@ -1,4 +1,4 @@
-package test;
+package weektest;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -27,13 +27,13 @@ public class pull {
             BufferedReader bf = new BufferedReader(
                     new FileReader(
                             new File(
-                                    "/Users/denyo/Downloads/weektest/ip.txt")));// 路径
+                                    "/Users/denyo/Downloads/weektest/order.log")));// 路径
             String line = null;
             while((line=bf.readLine())!=null){
                 //Thread.sleep(50);
                 producer.send(
                         new ProducerRecord<String, String>(
-                                "weektest2", line));
+                                "weektest", line));
             }
             bf.close();
             producer.close();

@@ -18,7 +18,7 @@ import redis.clients.jedis.Jedis
 
 import scala.collection.mutable
 
-object consumer {
+object weektest2 {
   def main(args: Array[String]): Unit = {
     val conf = new SparkConf().setAppName("offset").setMaster("local[3]")
       //设置每秒钟每个分区拉取kafka的速率
@@ -40,9 +40,9 @@ object consumer {
     //配置参数
     //配置基本参数
     //组名
-    val groupId = "zk00"
+    val groupId = "zk"
     //topic
-    val topic = "dask"
+    val topic = "weektest2"
     //指定Kafka的broker地址（SparkStreaming程序消费过程中，需要和Kafka的分区对应）
     val brokerList = "hadoop01:9092,hadoop02:9092,hadoop03:9092"
     // 编写Kafka的配置参数
@@ -93,31 +93,40 @@ object consumer {
 
 
       data.foreach(a=>{
+       val data = a.split("\\|")
+       val k = data(2).toLong
+       val j = data(3).toLong
+       val pro = data(6)
+
+       if(k!=j){
+       for(ip<-k.to(j)){
+         if(jedis.exists("ip:"+ip.toString)){
+           val money = jedis.get("ip:"+ip.toString).toLong
+
+           if(jedis.exists(pro)){
+             var SumMoney =jedis.get(pro).toLong
+             SumMoney=SumMoney+money
+             jedis.set(pro,SumMoney.toString)
+           }else{
+             jedis.set(pro,money.toString)
+           }
+
+         }
+       }}else{
+         if(jedis.exists("ip:"+k.toString)){
+           val money = jedis.get("ip:"+k.toString).toLong
+
+           if(jedis.exists(pro)){
+             var SumMoney =jedis.get(pro).toLong
+             SumMoney=SumMoney+money
+             jedis.set(pro,SumMoney.toString)
+           }else{
+             jedis.set(pro,money.toString)
+           }
+       }}
 
 
-            val jsondata: JSONObject = JSON.parseObject(a)
 
-
-            val Day = jsondata.getString("date").substring(0,10)
-            val Month = jsondata.getString("date").substring(0,7)
-
-            val money = jsondata.getString("money").toLong
-            val phone = jsondata.getString("phoneNum")
-
-
-            if(jedis.exists(Day)){
-              val money1 = jedis.get("test:"+Day).toLong+money
-              jedis.set("test:"+Day,money.toString)
-            }else{
-              jedis.set("test:"+Day,money.toString)
-            }
-
-            if(jedis.exists(Month)){
-              jedis.set("test:"+Month,(jedis.get("test:"+Month).toLong+money).toString)
-
-            }else{
-              jedis.set("test:"+Month,money.toString)
-            }
 
 
       })
@@ -128,8 +137,18 @@ object consumer {
 
     })
 
+
     // 启动
     ssc.start()
     ssc.awaitTermination()
+  }
+
+  def ip2Long(ip:String):Long ={
+    val s = ip.split("[.]")
+    var ipNum =0L
+    for(i<-0 until s.length){
+      ipNum = s(i).toLong | ipNum << 8L
+    }
+    ipNum
   }
 }
